@@ -1,0 +1,49 @@
+
+name: Build KonterBook APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'konterbook.zip'
+      - '.github/workflows/android.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Extract project
+        run: |
+          unzip -q konterbook.zip
+          cd konterbook
+          npm install
+          npx cap add android
+          npx cap sync android
+
+      - name: Build APK
+        run: |
+          cd konterbook/android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KonterBook-APK
+          path: konterbook/android/app/build/outputs/apk/debug/app-debug.apk
+          
